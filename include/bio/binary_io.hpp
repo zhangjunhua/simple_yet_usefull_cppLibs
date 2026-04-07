@@ -8,17 +8,14 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <initializer_list>
 #include <map>
 #include <new>
-#include <optional>
 #include <stdexcept>
 #include <string>
 #include <tuple>
 #include <type_traits>
 #include <unordered_map>
 #include <utility>
-#include <variant>
 #include <vector>
 
 namespace bio {
@@ -331,26 +328,6 @@ struct is_unordered_map<std::unordered_map<K, V, Hash, Eq, Alloc>>
 template <class T>
 inline constexpr bool is_unordered_map_v = is_unordered_map<T>::value;
 
-// std::optional detection.
-template <class T>
-struct is_optional : std::false_type {};
-
-template <class U>
-struct is_optional<std::optional<U>> : std::true_type {};
-
-template <class T>
-inline constexpr bool is_optional_v = is_optional<T>::value;
-
-// std::variant detection.
-template <class T>
-struct is_variant : std::false_type {};
-
-template <class... Ts>
-struct is_variant<std::variant<Ts...>> : std::true_type {};
-
-template <class T>
-inline constexpr bool is_variant_v = is_variant<T>::value;
-
 // tuple-like detection.
 template <class T, class = void>
 struct is_tuple : std::false_type {};
@@ -422,35 +399,6 @@ inline std::size_t from_size(std::uint64_t value) {
   return static_cast<std::size_t>(value);
 }
 
-// Variant index dispatch for C++17.
-template <class Variant, std::size_t... Is>
-inline void read_variant_by_index_impl(BinaryFile &file, Variant &value,
-                                       std::uint64_t idx,
-                                       std::index_sequence<Is...>) {
-  bool handled = false;
-  (void)std::initializer_list<int>{
-      (idx == Is
-           ? (static_cast<void>([&] {
-                using Alt = std::variant_alternative_t<Is, Variant>;
-                Alt tmp{};
-                file.load(tmp);
-                value = std::move(tmp);
-              }()),
-              handled = true,
-              0)
-           : 0)...};
-  if (!handled) {
-    throw std::runtime_error("BinaryFile: variant index out of range");
-  }
-}
-
-template <class Variant>
-inline void read_variant_by_index(BinaryFile &file, Variant &value,
-                                  std::uint64_t idx) {
-  read_variant_by_index_impl(file, value, idx,
-                             std::make_index_sequence<
-                                 std::variant_size_v<Variant>>{});
-}
 
 } // namespace detail
 
@@ -499,17 +447,6 @@ void BinaryFile::write(const T &value) {
       write(kv.first);
       write(kv.second);
     }
-  } else if constexpr (detail::is_optional_v<U>) {
-    const bool has_value = value.has_value();
-    write_raw(&has_value, sizeof(has_value));
-    if (has_value) {
-      write(*value);
-    }
-  } else if constexpr (detail::is_variant_v<U>) {
-    // Store active index followed by payload.
-    const std::uint64_t idx = static_cast<std::uint64_t>(value.index());
-    write_raw(&idx, sizeof(idx));
-    std::visit([this](const auto &elem) { write(elem); }, value);
   } else if constexpr (detail::is_pair_v<U>) {
     write(value.first);
     write(value.second);
@@ -576,24 +513,6 @@ void BinaryFile::read(T &value) {
       read(mapped);
       value.emplace(std::move(key), std::move(mapped));
     }
-  } else if constexpr (detail::is_optional_v<U>) {
-    bool has_value = false;
-    read_raw(&has_value, sizeof(has_value));
-    if (has_value) {
-      typename U::value_type tmp{};
-      read(tmp);
-      value = std::move(tmp);
-    } else {
-      value.reset();
-    }
-  } else if constexpr (detail::is_variant_v<U>) {
-    // Read index then construct the active alternative.
-    std::uint64_t idx = 0;
-    read_raw(&idx, sizeof(idx));
-    if (idx >= std::variant_size_v<U>) {
-      throw std::runtime_error("BinaryFile: variant index out of range");
-    }
-    detail::read_variant_by_index(*this, value, idx);
   } else if constexpr (detail::is_pair_v<U>) {
     read(value.first);
     read(value.second);
