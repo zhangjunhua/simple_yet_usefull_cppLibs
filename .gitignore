@@ -1,1 +1,21 @@
+# macOS
 .DS_Store
+
+# Build output
+build/
+
+# Compiled artifacts
+*.o
+*.a
+*.so
+*.dylib
+
+# clangd cache
+.cache/
+
+# IntelliSense (machine-specific)
+.vscode/settings.json
+.vscode/launch.json
+
+# Generated binaries
+*.bin
