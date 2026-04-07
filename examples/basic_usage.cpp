@@ -1,4 +1,4 @@
-#include "bio/bio.hpp"
+#include "bio/binary_io.hpp"
 
 #include <iostream>
 #include <string>

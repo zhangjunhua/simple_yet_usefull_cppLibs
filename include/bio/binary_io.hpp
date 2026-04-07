@@ -1,4 +1,5 @@
-#pragma once
+#ifndef BIO_BINARY_IO_HPP
+#define BIO_BINARY_IO_HPP
 
 #include <algorithm>
 #include <array>
@@ -606,3 +607,5 @@ void BinaryFile::read(T &value) {
 }
 
 } // namespace bio
+
+#endif // BIO_BINARY_IO_HPP
