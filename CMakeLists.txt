@@ -11,6 +11,3 @@ target_include_directories(bio_headers INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/inc
 
 add_executable(bio_example examples/basic_usage.cpp)
 target_link_libraries(bio_example PRIVATE bio_headers)
-
-add_executable(bio_example_variant examples/variant_usage.cpp)
-target_link_libraries(bio_example_variant PRIVATE bio_headers)
