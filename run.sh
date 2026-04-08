@@ -7,9 +7,8 @@ BUILD_DIR="$ROOT_DIR/build"
 cmake -S "$ROOT_DIR" -B "$BUILD_DIR"
 cmake --build "$BUILD_DIR" --config Release
 
-"$BUILD_DIR/bio_example" 2>&1 | tee "$BUILD_DIR/bio_example($(date +%Y-%m-%d_%H-%M-%S)).log"
-"$BUILD_DIR/bio_test_basic"
+"$BUILD_DIR/bio_example"
+"$BUILD_DIR/obj2str_example"
+"$BUILD_DIR/util_example"
 
 echo "OK"
-
-

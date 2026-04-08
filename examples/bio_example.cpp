@@ -1,6 +1,4 @@
 #include "bio/binary_io.hpp"
-#include "obj2str.h"
-#include "header.h"
 
 
 #include <iostream>
@@ -37,16 +35,6 @@ int main() {
     bio::BinaryFile file("examples.bin", bio::BinaryFile::Mode::Read);
     file.load(in);
   }
-
-  int a=3;
-  double b=3.14;
-  std::string c="hello";
-
-  vlog(a, b, c);
-
-  mlog(" the value of a is %d, b is %f, c is %s", a, b, c.c_str());
-
-
 
   std::cout << in.id << " " << in.name << " " << in.values.size() << "\n";
   return 0;
