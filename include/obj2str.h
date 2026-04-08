@@ -13,6 +13,10 @@ std::string str(const T &obj) {
   return std::to_string(obj);
 }
 
+inline std::string str(const std::string &obj) {
+  return obj;
+}
+
 template<typename T1, typename T2>
 std::string str(const std::pair<T1, T2> &pair);
 

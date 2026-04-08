@@ -44,6 +44,10 @@ int main() {
 
   vlog(a, b, c);
 
+  mlog(" the value of a is %d, b is %f, c is %s", a, b, c.c_str());
+
+
+
   std::cout << in.id << " " << in.name << " " << in.values.size() << "\n";
   return 0;
 }
