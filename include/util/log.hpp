@@ -1,10 +1,11 @@
 #ifndef CPPLIBS_UTIL_LOG_HPP
 #define CPPLIBS_UTIL_LOG_HPP
 
-#include <cstdio>
 #include <cstdlib>
+#include <cstdio>
 #include <string>
 #include "util/timer.hpp"
+#include "util/format.hpp"
 
 // Log levels: none < error < info < verbose < debug
 #define LOG_NONE    0
@@ -18,35 +19,44 @@
 #endif
 
 namespace log_detail {
-// Extract filename from a full path.
+
 inline std::string get_filename(const std::string &path) {
   size_t pos = path.rfind('/');
   return pos == std::string::npos ? path : path.substr(pos + 1);
 }
+
+// Build the log prefix: [datetime file:line]
+inline std::string prefix(const char *file, int line) {
+  return fmt::format("[{} {}:{}] ", now(), get_filename(file), line);
+}
+
 } // namespace log_detail
 
-// Internal: raw log without newline.
-#define LOG_RAW_N(format, ...) \
-  printf("[%s %s:%d] " format, now().c_str(), log_detail::get_filename(__FILE__).c_str(), __LINE__, ##__VA_ARGS__)
-
-// Internal: raw log with newline.
-#define LOG_RAW(format, ...) LOG_RAW_N(format "\n", ##__VA_ARGS__)
+// Internal: emit a fully-formed log line to stdout.
+// Usage: LOG_EMIT_("info:", __FILE__, __LINE__, "loaded {} items", n)
+#define LOG_EMIT_(level, file, line, fmt_str, ...) \
+  fputs((log_detail::prefix(file, line) + level + \
+         fmt::format(fmt_str, ##__VA_ARGS__) + "\n").c_str(), stdout)
 
 // Fatal log: prints to stderr and exits.
-#define log_fatal(format, ...) \
-  { \
-    fprintf(stderr, "[%s %s:%d] fatal:" format "\n", now().c_str(), log_detail::get_filename(__FILE__).c_str(), __LINE__, ##__VA_ARGS__); \
+// Usage: log_fatal("bad value: {}", x)
+#define log_fatal(fmt_str, ...) \
+  do { \
+    fputs((log_detail::prefix(__FILE__, __LINE__) + "fatal:" + \
+           fmt::format(fmt_str, ##__VA_ARGS__) + "\n").c_str(), stderr); \
     exit(EXIT_FAILURE); \
-  }
+  } while(0)
 
 // Assert with formatted error message.
-#define assertf(cond, fmt, ...) if (!(cond)) log_fatal(fmt, ##__VA_ARGS__)
+// Usage: assertf(x > 0, "x must be positive, got {}", x)
+#define assertf(cond, fmt_str, ...) \
+  do { if (!(cond)) log_fatal(fmt_str, ##__VA_ARGS__); } while(0)
 
-// Level-gated logs.
-#define FLOG(format, ...) log_fatal(format, ##__VA_ARGS__)
-#define ELOG(format, ...) if constexpr (LOG_LEVEL >= LOG_ERROR)   LOG_RAW("error:"   format, ##__VA_ARGS__)
-#define ILOG(format, ...) if constexpr (LOG_LEVEL >= LOG_INFO)    LOG_RAW("info:"    format, ##__VA_ARGS__)
-#define VLOG(format, ...) if constexpr (LOG_LEVEL >= LOG_VERBOSE) LOG_RAW("verbose:" format, ##__VA_ARGS__)
-#define DLOG(format, ...) if constexpr (LOG_LEVEL >= LOG_DEBUG)   LOG_RAW("debug:"   format, ##__VA_ARGS__)
+// Level-gated logs. Usage: ILOG("loaded {} items", n)
+#define FLOG(fmt_str, ...) log_fatal(fmt_str, ##__VA_ARGS__)
+#define ELOG(fmt_str, ...) if constexpr (LOG_LEVEL >= LOG_ERROR)   LOG_EMIT_("error:",   __FILE__, __LINE__, fmt_str, ##__VA_ARGS__)
+#define ILOG(fmt_str, ...) if constexpr (LOG_LEVEL >= LOG_INFO)    LOG_EMIT_("info:",    __FILE__, __LINE__, fmt_str, ##__VA_ARGS__)
+#define VLOG(fmt_str, ...) if constexpr (LOG_LEVEL >= LOG_VERBOSE) LOG_EMIT_("verbose:", __FILE__, __LINE__, fmt_str, ##__VA_ARGS__)
+#define DLOG(fmt_str, ...) if constexpr (LOG_LEVEL >= LOG_DEBUG)   LOG_EMIT_("debug:",   __FILE__, __LINE__, fmt_str, ##__VA_ARGS__)
 
 #endif // CPPLIBS_UTIL_LOG_HPP

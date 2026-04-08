@@ -35,12 +35,10 @@
 #define PP_WATCH_(x) << (#x) << " = " << str(x) << ", "
 #define PP_PR(...) std::cout PP_DO_EACH(PP_WATCH_, ##__VA_ARGS__) << std::endl
 
-// vlog: printf-style log with variable names and values.
-// Usage: vlog(x, y);  →  [2026-04-08 12:00:00 main.cpp:10] x=1,y=2,
-#define vlog_fmt_(x) #x "=%s,"
-#define vlog_str_(x) ,str(x).c_str()
-#define vlog(...) printf("[%s %s:%d] " PP_DO_EACH(vlog_fmt_, ##__VA_ARGS__) "\n", \
-                         now().c_str(), log_detail::get_filename(__FILE__).c_str(), __LINE__ \
-                         PP_DO_EACH(vlog_str_, ##__VA_ARGS__))
+// vlog: log variable names and values.
+// Usage: vlog(x, y);  →  [2026-04-08 12:00:00 main.cpp:10] x=42,y=3.14,
+#define vlog_entry_(x) + (#x "=" + str(x) + ",")
+#define vlog(...) fputs((log_detail::prefix(__FILE__, __LINE__) \
+                         PP_DO_EACH(vlog_entry_, ##__VA_ARGS__) + "\n").c_str(), stdout)
 
 #endif // CPPLIBS_UTIL_DEBUG_HPP

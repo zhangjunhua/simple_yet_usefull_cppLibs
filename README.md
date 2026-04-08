@@ -118,20 +118,40 @@ double elapsed = wall_time() - t0;
 
 ---
 
+### `util/format.hpp` — String Formatting
+
+Lightweight C++17 `{}` placeholder formatting, mirrors `std::format` from C++20.
+
+```cpp
+#include "util/format.hpp"
+
+fmt::format("hello {}", name)                // "hello world"
+fmt::format("({}, {})", 1.5, 2.5)           // "(1.500000, 2.500000)"
+fmt::format("loaded {} items", n)           // "loaded 42 items"
+fmt::format("set = {{1, 2, 3}}")            // "set = {1, 2, 3}"  (escaped braces)
+fmt::format("map = {}", str(my_map))        // "map = {a:1,b:2}"
+```
+
+Each `{}` is replaced by the next argument converted via `str()`. Use `{{`/`}}` for literal braces.
+
+---
+
 ### `util/log.hpp` — Logging
 
-Level-gated logging macros. Set `LOG_LEVEL` before including (default: `LOG_INFO`).
+Level-gated logging macros with `{}` placeholder formatting. Set `LOG_LEVEL` before including (default: `LOG_INFO`).
 
 ```cpp
 #define LOG_LEVEL LOG_VERBOSE  // optional, before include
 #include "util/log.hpp"
 
-ELOG("fatal: %s", msg);     // always prints, then exits
-ILOG("loaded %d items", n); // prints at INFO and above
-VLOG("detail: x=%d", x);   // prints at VERBOSE and above
-DLOG("trace: ptr=%p", p);   // prints at DEBUG only
+FLOG("fatal: {}", msg);          // always prints to stderr, then exits
+ELOG("error: {} at line {}", e, line); // prints at ERROR and above
+ILOG("loaded {} items", n);      // prints at INFO and above
+VLOG("detail: x={}", x);        // prints at VERBOSE and above
+DLOG("trace: ptr={}", ptr);     // prints at DEBUG only
 
-assertf(x > 0, "x must be positive, got %d", x);
+assertf(x > 0, "x must be positive, got {}", x);
+log_fatal("unrecoverable: {}", reason);
 ```
 
 Output format: `[2026-04-08 21:00:00 main.cpp:42] info:loaded 10 items`
