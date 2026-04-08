@@ -32,15 +32,15 @@
 #define PP_DO_EACH_6(what, x, ...) what(x) PP_DO_EACH_5(what, __VA_ARGS__)
 #define PP_DO_EACH(what, ...) PP_CONCAT(PP_DO_EACH_, PP_NARG(__VA_ARGS__))(what, ##__VA_ARGS__)
 
-#define PP_WATCH(x) << (#x) << " = " << str(x) << ", "
-#define PP_PR(...) std::cout PP_DO_EACH(PP_WATCH, ##__VA_ARGS__) << std::endl
+#define PP_WATCH_(x) << (#x) << " = " << str(x) << ", "
+#define PP_PR(...) std::cout PP_DO_EACH(PP_WATCH_, ##__VA_ARGS__) << std::endl
 
 // vlog: printf-style log with variable names and values.
 // Usage: vlog(x, y);  →  [2026-04-08 12:00:00 main.cpp:10] x=1,y=2,
-#define vlog_format(x) #x "=%s,"
-#define vlog_string(x) ,str(x).c_str()
-#define vlog(...) printf("[%s %s:%d] " PP_DO_EACH(vlog_format, ##__VA_ARGS__) "\n", \
-                         now().c_str(), getfilename(__FILE__).c_str(), __LINE__      \
-                         PP_DO_EACH(vlog_string, ##__VA_ARGS__))
+#define vlog_fmt_(x) #x "=%s,"
+#define vlog_str_(x) ,str(x).c_str()
+#define vlog(...) printf("[%s %s:%d] " PP_DO_EACH(vlog_fmt_, ##__VA_ARGS__) "\n", \
+                         now().c_str(), log_detail::get_filename(__FILE__).c_str(), __LINE__ \
+                         PP_DO_EACH(vlog_str_, ##__VA_ARGS__))
 
 #endif // CPPLIBS_UTIL_DEBUG_HPP

@@ -6,15 +6,15 @@
 #include <type_traits>
 
 // Returns the value after the given option flag, or nullptr if not found.
-// Example: --output file.txt  →  getCmdOption(argc, argv, "--output") == "file.txt"
-inline char *getCmdOption(int argc, char **argv, const std::string &option) {
+// Example: --output file.txt  →  cmd_get_option(argc, argv, "--output") == "file.txt"
+inline char *cmd_get_option(int argc, char **argv, const std::string &option) {
   char **itr = std::find(argv, argv + argc, option);
   if (itr != (argv + argc) && ++itr != (argv + argc)) return *itr;
   return nullptr;
 }
 
 // Returns true if the given flag exists in argv.
-inline bool cmdOptionExists(int argc, char **argv, const std::string &option) {
+inline bool cmd_has_option(int argc, char **argv, const std::string &option) {
   return std::find(argv, argv + argc, option) != (argv + argc);
 }
 
@@ -35,6 +35,6 @@ inline void cmd_opt_set(int argc, char **argv, const std::string &opt, T &var, c
 
 // Convenience macros (require argc/argv in scope).
 #define CMDOPTSET(opt, var, dft) cmd_opt_set(argc, argv, opt, var, dft)
-#define CMDOPTFIND(opt)          cmdOptionExists(argc, argv, opt)
+#define CMDOPTFIND(opt)          cmd_has_option(argc, argv, opt)
 
 #endif // CPPLIBS_UTIL_CMDLINE_HPP

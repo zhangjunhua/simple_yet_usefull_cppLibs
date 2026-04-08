@@ -32,8 +32,8 @@ public:
   void seed(unsigned int s) { _rng.seed(s); }
   void seedr()              { seed(std::random_device()()); }
 
-  void set(T max)         { _dist = DT(T(0), max); }
-  void set(T min, T max)  { _dist = DT(min, max); }
+  void set_range(T max)         { _dist = DT(T(0), max); }
+  void set_range(T min, T max)  { _dist = DT(min, max); }
 
   T min() { return _dist.min(); }
   T max() { return _dist.max(); }

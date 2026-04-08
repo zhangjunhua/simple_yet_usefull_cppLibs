@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
   cmd_opt_set(argc, argv, "--output", output, std::string("out.txt"));
   cmd_opt_set(argc, argv, "--count",  count,  1);
 
-  bool verbose = cmdOptionExists(argc, argv, "--verbose");
+  bool verbose = cmd_has_option(argc, argv, "--verbose");
 
   // Or with macros (argc/argv must be in scope):
   CMDOPTSET("--output", output, std::string("out.txt"));
