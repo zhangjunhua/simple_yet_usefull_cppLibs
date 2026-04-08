@@ -290,3 +290,21 @@ cmake --build build
 ./build/obj2str_example
 ./build/util_example
 ```
+
+---
+
+## On writing small libraries in the age of AI
+
+AI can now generate most of this code on demand. Ask a model to serialize a struct, format a log line, or parse command-line arguments — it will produce something reasonable in seconds. So why does a library like this still exist?
+
+The question cuts deeper than it first appears.
+
+When AI generates code inline, you get a solution — but not an *opinion*. Each generated snippet makes slightly different choices: this one uses `snprintf`, that one uses `ostringstream`, another reaches for `fmtlib`. The codebase accumulates dialects. No single answer to "how do we do logging here?" Every new contributor has to read the code to find out what's already there, and often doesn't bother.
+
+A library, even a small one, is not primarily about saving keystrokes. It is about *commitment*. It says: we have thought about this problem, made a choice, and we will be consistent. The value is not the code itself — it is the decision the code represents. That decision now lives in one place, has a name, and can be reasoned about, replaced, or improved as a unit.
+
+There is also something that AI-generated code structurally cannot provide: **zero dependencies with known behavior under your exact constraints**. Embedded firmware, HPC clusters, competition programming judges, air-gapped build systems — these environments have no room for pulling in `fmtlib` or `spdlog` at generation time. A single header that does exactly what you need, nothing more, is not a workaround. It is the right tool.
+
+Finally, writing a library — even a humble one — is an act of understanding. You cannot write `BinaryFile::write` for `std::vector` without confronting the question of what "serialize" actually means for a type with pointer-owning heap storage. You cannot design a log macro without deciding what information is worth carrying at a call site. AI can help you implement those decisions. It cannot make them for you.
+
+This library is small by design. It covers the problems that come up in almost every C++ project that touches files, time, and terminal output. It makes one set of choices, documented here, and gets out of the way. If AI makes it easier to build something like this — and it does — then perhaps the point was never the code. The point was the clarity of knowing, for your project, how these things are done.
