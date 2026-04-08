@@ -31,35 +31,13 @@ public:
   // Construct and open a file.
   BinaryFile(const std::string &path, Mode mode) { open(path, mode); }
 
-  BinaryFile(const BinaryFile &) = delete; // copy construction not allowed
-  BinaryFile &operator=(const BinaryFile &) = delete; // copy assignment not allowed
-
-  // Move support transfers ownership.
-  BinaryFile(BinaryFile &&other) noexcept { swap(other); }
-  // Move-assign transfers ownership; closes current file if open.
-  BinaryFile &operator=(BinaryFile &&other) noexcept {
-    if (this != &other) {
-      close();
-      swap(other);
-    }
-    return *this;
-  }
+  BinaryFile(const BinaryFile &) = delete;
+  BinaryFile &operator=(const BinaryFile &) = delete;
+  BinaryFile(BinaryFile &&) = delete;
+  BinaryFile &operator=(BinaryFile &&) = delete;
 
   // Destructor closes file and flushes pending writes.
   ~BinaryFile() { close(); }
-
-  // Internal buffer size; 0 disables internal buffering.
-  void set_buffer_size(std::size_t bytes) {
-    if (buffer_size_ == bytes) return;
-    if (file_ && mode_ == Mode::Write && buffer_pos_ > 0) {
-      flush_write_buffer();
-    }
-    buffer_size_ = bytes;
-    if (file_) {
-      reset_buffer();
-      apply_stdio_buffering();
-    }
-  }
 
   // Open file in binary mode and reset buffers.
   void open(const std::string &path, Mode mode) {
@@ -189,31 +167,9 @@ private:
   }
 
   // Swap internal state with another instance.
-  void swap(BinaryFile &other) noexcept {
-    std::swap(file_, other.file_);
-    std::swap(mode_, other.mode_);
-    std::swap(buffer_, other.buffer_);
-    std::swap(buffer_size_, other.buffer_size_);
-    std::swap(buffer_pos_, other.buffer_pos_);
-    std::swap(buffer_filled_, other.buffer_filled_);
-  }
-
   void reset_buffer() {
-    if (buffer_size_ == 0) {
-      if (buffer_) {
-        std::free(buffer_);
-        buffer_ = nullptr;
-      }
-      buffer_pos_ = 0;
-      buffer_filled_ = 0;
-      return;
-    }
-    void *ptr = buffer_ ? std::realloc(buffer_, buffer_size_)
-                        : std::malloc(buffer_size_);
-    if (!ptr) {
-      buffer_ = nullptr;
-      throw std::bad_alloc();
-    }
+    void *ptr = std::malloc(buffer_size_);
+    if (!ptr) throw std::bad_alloc();
     buffer_ = static_cast<char *>(ptr);
     buffer_pos_ = 0;
     buffer_filled_ = 0;
@@ -241,11 +197,9 @@ private:
     buffer_pos_ = 0;
   }
 
-  // Avoid double buffering: internal buffer or stdio buffer, not both.
+  // Disable stdio buffering; we manage our own buffer.
   void apply_stdio_buffering() {
-    if (!file_) return;
-    if (buffer_size_ == 0)  std::setvbuf(file_, nullptr, _IOFBF, 0);
-     else std::setvbuf(file_, nullptr, _IONBF, 0);
+    std::setvbuf(file_, nullptr, _IONBF, 0);
   }
 
   std::FILE *file_ = nullptr;       // Owned FILE* handle.
